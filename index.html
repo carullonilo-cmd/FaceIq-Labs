@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>Retícula — Geometría facial</title>
+<meta name="description" content="Mide las proporciones clásicas de tu rostro en el navegador de tu móvil. Gratis, todo local, solo por curiosidad." />
+<meta name="theme-color" content="#0A0F1A" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Retícula" />
+<link rel="apple-touch-icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230A0F1A"/><circle cx="50" cy="50" r="30" fill="none" stroke="%232BAF97" stroke-width="3"/><path d="M50 12v76M12 50h76" stroke="%237CF5D6" stroke-width="3"/><circle cx="50" cy="50" r="4" fill="%237CF5D6"/></svg>' />
+<link rel="manifest" href='data:application/json,{"name":"Retícula","short_name":"Retícula","display":"standalone","background_color":"%230A0F1A","theme_color":"%230A0F1A","start_url":"."}' />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0A0F1A;--panel:#10151F;--panel-2:#141B29;--line:#20293B;--line-2:#2C3852;
+    --text:#E7ECF5;--muted:#8090AB;--muted-2:#5D6B87;--accent:#7CF5D6;--accent-dim:#2BAF97;
+    --amber:#F5B851;--bad:#F0876B;
+    --display:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;--mono:'Space Mono',ui-monospace,monospace;
+    --maxw:1120px;--safe:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+    background-image:radial-gradient(1200px 600px at 80% -10%, rgba(124,245,214,.06), transparent 60%),linear-gradient(var(--line) 1px, transparent 1px),linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:auto,44px 44px,44px 44px;background-position:0 0,-1px -1px,-1px -1px;background-attachment:fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(120% 100% at 50% 20%, transparent 40%, var(--ink) 88%);}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 18px;position:relative;z-index:1}
+  a{color:var(--accent);text-decoration:none}
+
+  header.top{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);background:rgba(10,15,26,.82);backdrop-filter:blur(10px)}
+  .top-in{display:flex;align-items:center;justify-content:space-between;height:54px}
+  .brand{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:600;letter-spacing:.02em}
+  .brand .mk{width:20px;height:20px;position:relative;flex:0 0 auto}
+  .brand .mk::before,.brand .mk::after{content:"";position:absolute;background:var(--accent)}
+  .brand .mk::before{left:50%;top:0;width:1.5px;height:100%;transform:translateX(-50%)}
+  .brand .mk::after{top:50%;left:0;height:1.5px;width:100%;transform:translateY(-50%)}
+  .brand .ring{position:absolute;inset:2.5px;border:1.5px solid var(--accent-dim);border-radius:50%}
+  .top-tag{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+  .hero{padding:44px 0 20px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent-dim);margin:0 0 16px}
+  h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,8vw,60px);line-height:1.02;letter-spacing:-.02em;margin:0 0 16px;max-width:16ch}
+  h1 em{font-style:normal;color:var(--accent)}
+  .lede{font-size:clamp(15px,4vw,18px);color:var(--muted);max-width:52ch;margin:0 0 20px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;color:var(--muted);border:1px solid var(--line-2);border-radius:999px;padding:5px 10px;background:var(--panel)}
+  .chip.on{color:var(--ink);background:var(--amber);border-color:var(--amber);font-weight:700}
+
+  .lab{margin:26px 0 18px;border:1px solid var(--line-2);border-radius:16px;background:linear-gradient(180deg,var(--panel),var(--ink));overflow:hidden}
+  .lab-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .lab-head .t{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .status{font-family:var(--mono);font-size:11.5px;color:var(--accent);display:flex;align-items:center;gap:7px}
+  .status .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  .status.busy .dot{animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .stage{display:grid;grid-template-columns:1fr;gap:0}
+  @media(min-width:880px){.stage{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}}
+  .canvas-col{position:relative;min-height:300px;background:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:26px 26px;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden}
+  .canvas-col canvas{max-width:100%;max-height:56vh;border-radius:10px;display:none}
+  #video{display:none;max-width:100%;max-height:56vh;border-radius:10px}
+  .guide{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none}
+  .guide.show{display:flex}
+  .guide svg{width:60%;max-width:230px;opacity:.6}
+  .placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;color:var(--muted)}
+  .cross{width:104px;height:104px}
+  .cross svg{width:100%;height:100%;opacity:.9}
+  .ph-t{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase}
+  .scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 18px var(--accent);opacity:0;pointer-events:none}
+  .scanning .scanline{opacity:1;animation:scan 1.5s linear infinite}
+  @keyframes scan{0%{top:6%}100%{top:94%}}
+
+  .readout{padding:18px 16px 20px}
+  @media(min-width:880px){.readout{border-left:1px solid var(--line)}}
+  .idle-note{color:var(--muted);font-size:13.5px}
+
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 16px calc(14px + var(--safe));border-top:1px solid var(--line);background:var(--panel-2)}
+  .controls .wide{grid-column:1 / -1}
+  .btn{appearance:none;cursor:pointer;font-family:var(--display);font-weight:600;font-size:14px;border-radius:11px;padding:14px 16px;border:1px solid var(--line-2);background:var(--panel);color:var(--text);transition:.15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%}
+  .btn:hover{border-color:var(--accent-dim)}
+  .btn:active{transform:scale(.98)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn.primary{background:var(--accent);color:#04241d;border-color:var(--accent)}
+  .btn.ghost{font-family:var(--mono);font-size:12px;font-weight:400;padding:10px;background:transparent;color:var(--muted)}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+  .btn svg{width:17px;height:17px}
+  .cam-actions{display:none;grid-column:1 / -1;grid-template-columns:1fr 1fr;gap:9px}
+  .cam-actions.show{display:grid}
+  .err{color:var(--bad);font-family:var(--mono);font-size:12px;padding:0 16px 14px}
+
+  .overall{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+  .gauge{--v:0;width:92px;height:92px;flex:0 0 auto;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--v)*1%), var(--line) 0);display:flex;align-items:center;justify-content:center;position:relative}
+  .gauge::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--panel)}
+  .gauge b{position:relative;font-family:var(--display);font-weight:700;font-size:25px}
+  .overall .lab-t{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .overall h3{font-family:var(--display);font-weight:600;font-size:19px;margin:2px 0 4px}
+  .overall p{margin:0;color:var(--muted);font-size:13px;max-width:34ch}
+
+  .pillars{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .pillar{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel)}
+  .pillar .p-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .pillar .p-name{font-family:var(--display);font-weight:600;font-size:13.5px}
+  .pillar .p-val{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--accent)}
+  .bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent-dim),var(--accent));border-radius:4px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  .pillar .p-desc{margin:8px 0 0;font-size:11.5px;color:var(--muted-2);line-height:1.4}
+
+  .metrics-t{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;display:flex;justify-content:space-between;align-items:center}
+  table.metrics{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.metrics th,table.metrics td{text-align:left;padding:8px 4px;border-bottom:1px solid var(--line)}
+  table.metrics th{font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2)}
+  table.metrics td.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+  table.metrics .name{color:var(--text)}
+  table.metrics .ideal{color:var(--muted)}
+  .tag{display:inline-block;font-family:var(--mono);font-size:9.5px;padding:2px 6px;border-radius:999px;border:1px solid var(--line-2)}
+  .tag.good{color:var(--accent);border-color:var(--accent-dim)}
+  .tag.mid{color:var(--amber);border-color:#6b5622}
+
+  .actions-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .kind-note{margin-top:16px;border:1px solid var(--line);border-left:2px solid var(--accent-dim);border-radius:0 10px 10px 0;padding:13px 14px;background:var(--panel);color:var(--muted);font-size:13px}
+  .kind-note b{color:var(--text);font-weight:600}
+
+  section.block{padding:34px 0 6px}
+  section.block h2{font-family:var(--display);font-weight:600;font-size:clamp(21px,5vw,30px);letter-spacing:-.01em;margin:0 0 8px}
+  section.block .sub{color:var(--muted);max-width:56ch;margin:0 0 22px;font-size:14px}
+
+  .progress{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:18px 16px}
+  .progress .empty{color:var(--muted-2);font-size:13.5px;font-family:var(--mono)}
+  .spark{width:100%;height:64px;display:block;margin:6px 0 14px}
+  .hist{list-style:none;margin:0;padding:0}
+  .hist li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .hist li:last-child{border-bottom:none}
+  .hist .h-date{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .hist .h-score{font-family:var(--display);font-weight:700;font-size:16px;color:var(--accent)}
+  .hist .h-delta{font-family:var(--mono);font-size:11px;color:var(--muted-2);min-width:44px;text-align:right}
+  .hist .h-delta.up{color:var(--accent)} .hist .h-delta.down{color:var(--bad)}
+
+  .qa{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}
+  .qa details{border-bottom:1px solid var(--line)}
+  .qa details:last-child{border-bottom:none}
+  .qa summary{list-style:none;cursor:pointer;padding:15px 16px;font-family:var(--display);font-weight:600;font-size:14.5px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .qa summary::-webkit-details-marker{display:none}
+  .qa summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:18px;transition:.2s}
+  .qa details[open] summary::after{transform:rotate(45deg)}
+  .qa .a{padding:0 16px 16px;color:var(--muted);font-size:13.5px;line-height:1.55}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(min-width:760px){.cards{grid-template-columns:repeat(4,1fr)}}
+  .card{border:1px solid var(--line);border-radius:12px;padding:15px;background:linear-gradient(180deg,var(--panel),var(--ink))}
+  .card .n{font-family:var(--mono);font-size:11.5px;color:var(--accent-dim);letter-spacing:.08em}
+  .card h4{font-family:var(--display);font-weight:600;font-size:14.5px;margin:9px 0 5px}
+  .card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+
+  .two{display:grid;grid-template-columns:1fr;gap:14px;padding:34px 0}
+  @media(min-width:820px){.two{grid-template-columns:1fr 1fr}}
+  .box{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--panel)}
+  .box h3{font-family:var(--display);font-weight:600;font-size:17px;margin:0 0 12px;display:flex;align-items:center;gap:9px}
+  .box h3 .ic{width:18px;height:18px;color:var(--accent);flex:0 0 auto}
+  .box ul{margin:0;padding:0;list-style:none}
+  .box li{padding:9px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:13.5px}
+  .box li:last-child{border-bottom:none}
+  .box li b{color:var(--text);font-weight:600}
+
+  .install{display:none;margin:18px 0;border:1px dashed var(--line-2);border-radius:12px;padding:14px 16px;background:var(--panel);color:var(--muted);font-size:13px}
+  .install.show{display:block}
+  .install b{color:var(--text)}
+
+  footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted-2);font-size:12px}
+  footer .fin{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center}
+  footer .dis{max-width:62ch;line-height:1.55;margin-top:12px;font-family:var(--mono);font-size:10.5px;color:var(--muted-2)}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand"><span class="mk"><span class="ring"></span></span>Retícula</div>
+    <div class="top-tag">Geometría facial · local</div>
+  </div>
+</header>
+
+<main>
+  <section class="wrap hero">
+    <p class="eyebrow">Instrumento de medición · v2.0</p>
+    <h1>Tu cara, medida como <em>geometría</em>.</h1>
+    <p class="lede">Haz una foto y el navegador de tu móvil detecta 468 puntos de tu rostro para medir proporciones clásicas: tercios, quintos, simetría, ángulos y proporción áurea. Sin cuentas, sin pagos y sin subir nada a ningún servidor.</p>
+    <div class="chips">
+      <span class="chip on">Belleza = subjetiva</span>
+      <span class="chip">Gratis</span>
+      <span class="chip">Todo en tu móvil</span>
+      <span class="chip">Sin cirugías ni "arreglos"</span>
+    </div>
+
+    <div class="install" id="install">
+      <b>Úsala como app:</b> <span id="installTxt">en tu móvil, abre el menú del navegador y pulsa <b>«Añadir a pantalla de inicio»</b>.</span>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="lab" id="lab">
+      <div class="lab-head">
+        <span class="t">// Escáner de proporciones</span>
+        <span class="status" id="status"><span class="dot"></span><span id="statusText">En espera</span></span>
+      </div>
+
+      <div class="stage">
+        <div class="canvas-col" id="canvasCol">
+          <video id="video" playsinline muted></video>
+          <canvas id="canvas"></canvas>
+          <div class="scanline"></div>
+          <div class="guide" id="guide">
+            <svg viewBox="0 0 200 240" fill="none" stroke="#7CF5D6" stroke-width="1.4">
+              <ellipse cx="100" cy="120" rx="66" ry="88" stroke-dasharray="5 7"/>
+              <path d="M100 30v40M100 180v40M20 120h30M150 120h30"/>
+            </svg>
+          </div>
+          <div class="placeholder" id="placeholder">
+            <div class="cross">
+              <svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.2">
+                <circle cx="60" cy="60" r="46" stroke-dasharray="4 6" opacity=".5"/>
+                <path d="M60 6v22M60 92v22M6 60h22M92 60h22"/>
+                <circle cx="60" cy="60" r="3" fill="currentColor" stroke="none"/>
+                <path d="M40 46c4-6 10-9 20-9s16 3 20 9M42 76c5 6 11 9 18 9s13-3 18-9" opacity=".7"/>
+              </svg>
+            </div>
+            <div class="ph-t">Rostro de frente</div>
+            <div class="idle-note">Buena luz · mirando a cámara · sin gafas de sol · gesto relajado.</div>
+          </div>
+        </div>
+
+        <div class="readout" id="readout">
+          <p class="idle-note">Los resultados aparecerán aquí. Todo el análisis ocurre dentro de tu dispositivo: la imagen nunca sale de él.</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input type="file" id="fileCam" accept="image/*" capture="user" class="visually-hidden" />
+        <input type="file" id="fileGal" accept="image/*" class="visually-hidden" />
+        <button class="btn primary" id="selfieBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
+          Hacer selfie
+        </button>
+        <button class="btn" id="galleryBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15l5-4 4 3 3-2 6 5"/><circle cx="8.5" cy="9" r="1.5"/></svg>
+          Elegir foto
+        </button>
+        <button class="btn ghost wide" id="liveBtn">o usar cámara en vivo (ordenador)</button>
+        <div class="cam-actions" id="camActions">
+          <button class="btn primary" id="captureBtn">Capturar</button>
+          <button class="btn" id="cancelCamBtn">Cancelar</button>
+        </div>
+      </div>
+      <div class="err" id="err" hidden></div>
+    </div>
+  </section>
+
+  <section class="wrap block" id="progressSection">
+    <h2>Tu progreso</h2>
+    <p class="sub">Cada análisis se guarda solo en este dispositivo. Nadie más lo ve, y puedes borrarlo cuando quieras.</p>
+    <div class="progress" id="progress"><p class="empty">Aún no hay análisis guardados.</p></div>
+  </section>
+
+  <section class="wrap block">
+    <h2>Qué mide, exactamente</h2>
+    <p class="sub">Son cánones geométricos del arte y la anatomía clásica. Describen equilibrio, no valor. Una cara que se aleja del canon puede ser preciosa; el canon es solo una vara de medir entre muchas.</p>
+    <div class="cards">
+      <div class="card"><div class="n">01</div><h4>Tercios</h4><p>Frente, zona media y mentón. El canon busca tres franjas parecidas.</p></div>
+      <div class="card"><div class="n">02</div><h4>Quintos</h4><p>El ancho de la cara en cinco partes, cada una del ancho de un ojo.</p></div>
+      <div class="card"><div class="n">03</div><h4>Simetría</h4><p>Compara izquierda y derecha respecto al eje central.</p></div>
+      <div class="card"><div class="n">04</div><h4>Ángulos y áurea</h4><p>Inclinación de ojos, mandíbula y relaciones cercanas a 1,618.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap block">
+    <h2>Aprende qué significa</h2>
+    <p class="sub">Respuestas honestas, sin humo. Ninguna de estas medidas es un requisito para tener una cara bonita.</p>
+    <div class="qa" id="qa"></div>
+  </section>
+
+  <section class="wrap two">
+    <div class="box">
+      <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Privacidad real</h3>
+      <ul>
+        <li><b>Nada se sube.</b> El modelo corre en tu navegador; tu foto no viaja a ningún servidor.</li>
+        <li><b>Sin cuenta ni correo.</b> No hay registro ni recogida de datos.</li>
+        <li><b>El historial es tuyo.</b> Se guarda solo en tu móvil y lo borras con un botón.</li>
+        <li><b>Código a la vista.</b> Es un único archivo HTML que puedes leer y alojar tú.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>Léelo con cabeza</h3>
+      <ul>
+        <li><b>No es una nota de belleza.</b> Es cuánto se acerca tu cara a patrones geométricos históricos.</li>
+        <li><b>No da consejo médico</b> ni sugiere procedimientos, cirugía ni "arreglos".</li>
+        <li><b>El atractivo real</b> depende de expresión, cuidado, contexto y de quien mira.</li>
+        <li>Si un número te hace sentir mal contigo, ciérralo. Ningún dato define tu valor.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fin">
+      <div class="brand" style="font-size:14px"><span class="mk"><span class="ring"></span></span>Retícula</div>
+      <div>MediaPipe FaceMesh · 468 puntos · 100% en el cliente</div>
+    </div>
+    <p class="dis">Retícula es una herramienta de entretenimiento sobre geometría facial. No es un producto médico ni de diagnóstico, no evalúa el atractivo de una persona y no recomienda tratamientos, procedimientos ni cirugías. Las "proporciones ideales" son convenciones artísticas históricas, culturalmente sesgadas y limitadas. Ninguna medida aquí dice nada sobre el valor de nadie.</p>
+  </div>
+</footer>
+
+<script type="module">
+import { FaceLandmarker, FilesetResolver, DrawingUtils }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12";
+
+const $ = (id)=>document.getElementById(id);
+const statusEl=$("status"), statusText=$("statusText");
+const canvas=$("canvas"), ctx=canvas.getContext("2d");
+const video=$("video"), placeholder=$("placeholder"), canvasCol=$("canvasCol");
+const readout=$("readout"), errEl=$("err"), camActions=$("camActions"), guide=$("guide");
+const HKEY="reticula_history_v1";
+let landmarker=null, stream=null;
+
+function setStatus(t,busy){statusText.textContent=t;statusEl.classList.toggle("busy",!!busy);}
+function showErr(m){errEl.hidden=false;errEl.textContent="⚠ "+m;}
+function clearErr(){errEl.hidden=true;errEl.textContent="";}
+
+async function getLandmarker(){
+  if(landmarker) return landmarker;
+  setStatus("Cargando modelo…",true);
+  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
+  const opts={baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",delegate:"GPU"},runningMode:"IMAGE",numFaces:1};
+  try{landmarker=await FaceLandmarker.createFromOptions(fs,opts);}
+  catch(e){opts.baseOptions.delegate="CPU";landmarker=await FaceLandmarker.createFromOptions(fs,opts);}
+  return landmarker;
+}
+
+const px=(p,w,h)=>({x:p.x*w,y:p.y*h});
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const deg=(r)=>r*180/Math.PI;
+const scoreFromDev=(dev,k)=>Math.max(42,Math.min(99,Math.round(100*Math.exp(-k*dev))));
+const IDX={chin:152,foreheadTop:10,browL:105,browR:334,noseBottom:2,noseTip:1,
+  eyeLouter:33,eyeLinner:133,eyeRinner:362,eyeRouter:263,faceL:234,faceR:454,
+  alaL:129,alaR:358,mouthL:61,mouthR:291,midTop:168,jawL:172,jawR:397,lipTop:0,lipBot:17};
+
+function analyze(landmarks,w,h){
+  const P=(i)=>px(landmarks[i],w,h);
+  const chin=P(IDX.chin),fore=P(IDX.foreheadTop);
+  const browL=P(IDX.browL),browR=P(IDX.browR),browY=(browL.y+browR.y)/2;
+  const noseB=P(IDX.noseBottom);
+  const eLo=P(IDX.eyeLouter),eLi=P(IDX.eyeLinner),eRi=P(IDX.eyeRinner),eRo=P(IDX.eyeRouter);
+  const faceL=P(IDX.faceL),faceR=P(IDX.faceR),alaL=P(IDX.alaL),alaR=P(IDX.alaR);
+  const mL=P(IDX.mouthL),mR=P(IDX.mouthR);
+
+  const total=chin.y-fore.y;
+  const t1=(browY-fore.y)/total,t2=(noseB.y-browY)/total,t3=(chin.y-noseB.y)/total;
+  const thirdsDev=(Math.abs(t1-1/3)+Math.abs(t2-1/3)+Math.abs(t3-1/3))/3;
+  const thirdsScore=scoreFromDev(thirdsDev,6.5);
+
+  const faceW=dist(faceL,faceR);
+  const seg=[Math.abs(eLo.x-faceL.x),Math.abs(eLi.x-eLo.x),Math.abs(eRi.x-eLi.x),Math.abs(eRo.x-eRi.x),Math.abs(faceR.x-eRo.x)].map(s=>s/faceW);
+  const fifthsDev=seg.reduce((a,s)=>a+Math.abs(s-0.2),0)/5;
+  const fifthsScore=scoreFromDev(fifthsDev,5.5);
+
+  const axisX=(P(IDX.midTop).x+chin.x)/2;
+  const pairs=[[33,263],[133,362],[61,291],[129,358],[105,334],[46,276],[234,454]];
+  let asym=0;
+  for(const pr of pairs){const lp=P(pr[0]),rp=P(pr[1]);const dl=Math.abs(lp.x-axisX),dr=Math.abs(rp.x-axisX);asym+=Math.abs(dl-dr)/((dl+dr)/2||1);}
+  const symDev=asym/pairs.length, symScore=scoreFromDev(symDev,3.2);
+
+  const interocular=dist(eLi,eRi), eyeWidth=(dist(eLo,eLi)+dist(eRi,eRo))/2;
+  const noseW=dist(alaL,alaR), mouthW=dist(mL,mR), faceLen=chin.y-fore.y;
+  const R={eyeSpacing:interocular/eyeWidth,noseEye:noseW/interocular,mouthNose:mouthW/noseW,golden:faceLen/faceW};
+  const hd=(Math.abs(R.eyeSpacing-1)+Math.abs(R.noseEye-1)+Math.abs(R.mouthNose-1.5)/1.5+Math.abs(R.golden-1.618)/1.618)/4;
+  const harmonyScore=scoreFromDev(hd,3.6);
+
+  const tiltL=deg(Math.atan2(eLi.y-eLo.y,Math.abs(eLo.x-eLi.x)));
+  const tiltR=deg(Math.atan2(eRi.y-eRo.y,Math.abs(eRo.x-eRi.x)));
+  const canthal=(tiltL+tiltR)/2;
+  const jawTaper=dist(P(IDX.jawL),P(IDX.jawR))/faceW;
+  const lipFull=Math.abs(P(IDX.lipBot).y-P(IDX.lipTop).y)/mouthW;
+
+  const overall=Math.round(thirdsScore*0.25+fifthsScore*0.20+symScore*0.28+harmonyScore*0.27);
+
+  const rows=[
+    mk("Tercio superior",Math.round(t1*100)+"%","33%",Math.abs(t1-1/3)/(1/3)<=0.10),
+    mk("Tercio medio",Math.round(t2*100)+"%","33%",Math.abs(t2-1/3)/(1/3)<=0.10),
+    mk("Tercio inferior",Math.round(t3*100)+"%","33%",Math.abs(t3-1/3)/(1/3)<=0.10),
+    mk("Separación de ojos",R.eyeSpacing.toFixed(2)+"×","1.00×",Math.abs(R.eyeSpacing-1)<=0.14),
+    mk("Nariz vs. ojos",R.noseEye.toFixed(2)+"×","1.00×",Math.abs(R.noseEye-1)<=0.16),
+    mk("Boca vs. nariz",R.mouthNose.toFixed(2)+"×","1.50×",Math.abs(R.mouthNose-1.5)/1.5<=0.18),
+    mk("Largo / ancho (áurea)",R.golden.toFixed(2)+"×","1.618×",Math.abs(R.golden-1.618)/1.618<=0.14),
+    mk("Inclinación de ojos",canthal.toFixed(1)+"°","2–8°",canthal>=0&&canthal<=10),
+    mk("Estrechamiento mandíbula",jawTaper.toFixed(2)+"×","0.78×",Math.abs(jawTaper-0.78)/0.78<=0.14),
+    mk("Volumen de labios",lipFull.toFixed(2)+"×","0.30–0.55×",lipFull>=0.28&&lipFull<=0.6)
+  ];
+  return {overall,
+    pillars:[
+      {name:"Simetría",val:symScore,desc:"Equilibrio entre lado izquierdo y derecho respecto al eje central."},
+      {name:"Tercios",val:thirdsScore,desc:"Reparto vertical: frente, zona media y mentón."},
+      {name:"Quintos",val:fifthsScore,desc:"Reparto horizontal del ancho facial en cinco franjas."},
+      {name:"Armonía",val:harmonyScore,desc:"Relaciones clásicas de ojos, nariz, boca y proporción áurea."}
+    ],
+    rows,
+    geo:{foreY:fore.y,browY,noseBy:noseB.y,chinY:chin.y,axisX,fifthsX:[faceL.x,eLo.x,eLi.x,eRi.x,eRo.x,faceR.x]}
+  };
+}
+function mk(name,disp,idealDisp,good){return {name,disp,idealDisp,good};}
+
+function fitCanvas(iw,ih){const maxW=Math.min(canvasCol.clientWidth-32,640);const s=maxW/iw;canvas.width=iw;canvas.height=ih;canvas.style.width=(iw*s)+"px";canvas.style.height=(ih*s)+"px";}
+function drawOverlay(src,landmarks,geo){
+  ctx.drawImage(src,0,0,canvas.width,canvas.height);
+  ctx.fillStyle="rgba(10,15,26,.32)";ctx.fillRect(0,0,canvas.width,canvas.height);
+  const du=new DrawingUtils(ctx);
+  du.drawConnectors(landmarks,FaceLandmarker.FACE_LANDMARKS_TESSELATION,{color:"rgba(124,245,214,.26)",lineWidth:0.6});
+  du.drawConnectors(landmarks,FaceLandmarker.FACE_LANDMARKS_FACE_OVAL,{color:"rgba(124,245,214,.9)",lineWidth:1.4});
+  ctx.strokeStyle="rgba(245,184,81,.75)";ctx.lineWidth=1;ctx.setLineDash([5,5]);
+  for(const y of [geo.foreY,geo.browY,geo.noseBy,geo.chinY]){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+  ctx.strokeStyle="rgba(124,245,214,.7)";ctx.beginPath();ctx.moveTo(geo.axisX,0);ctx.lineTo(geo.axisX,canvas.height);ctx.stroke();
+  ctx.setLineDash([2,6]);ctx.strokeStyle="rgba(255,255,255,.28)";
+  for(const x of geo.fifthsX){ctx.beginPath();ctx.moveTo(x,canvas.height*0.72);ctx.lineTo(x,canvas.height*0.9);ctx.stroke();}
+  ctx.setLineDash([]);
+}
+function verdict(v){
+  if(v>=88)return "Tus proporciones se ajustan mucho al canon clásico, que es solo una vara de medir entre muchas.";
+  if(v>=78)return "Proporciones muy equilibradas según el canon. Recuerda: es geometría, no una nota.";
+  if(v>=68)return "Un reparto armónico con toques propios. Eso es lo que hace una cara memorable.";
+  return "Tu cara se aleja del canon en varias medidas. El canon es estrecho; tu rostro no tiene por qué encajar en él.";
+}
+function renderResults(res){
+  const rows=res.rows.map(row=>`<tr><td class="name">${row.name}</td><td class="num">${row.disp}</td><td class="num ideal">${row.idealDisp}</td><td class="num"><span class="tag ${row.good?'good':'mid'}">${row.good?'en canon':'propio'}</span></td></tr>`).join("");
+  const pillars=res.pillars.map(p=>`<div class="pillar"><div class="p-top"><span class="p-name">${p.name}</span><span class="p-val">${p.val}</span></div><div class="bar"><i data-w="${p.val}"></i></div><p class="p-desc">${p.desc}</p></div>`).join("");
+  readout.innerHTML=`
+    <div class="overall"><div class="gauge" id="gauge"><b>${res.overall}</b></div>
+      <div><div class="lab-t">Índice de armonía</div><h3>${res.overall} / 100</h3><p>${verdict(res.overall)}</p></div></div>
+    <div class="pillars">${pillars}</div>
+    <div class="metrics-t"><span>// Medidas detalladas</span></div>
+    <table class="metrics"><thead><tr><th>Relación</th><th style="text-align:right">Tuya</th><th style="text-align:right">Canon</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="kind-note"><b>Un recordatorio.</b> Estos números miden distancia a un patrón geométrico histórico, no lo guapa o guapo que eres. Casi todas las caras que recordamos rompen el canon en algún sitio. Úsalo como curiosidad, no como veredicto.</div>`;
+  requestAnimationFrame(()=>{const g=$("gauge");if(g)g.style.setProperty("--v",res.overall);document.querySelectorAll(".bar i").forEach(el=>{el.style.width=el.dataset.w+"%";});});
+}
+
+function loadHistory(){try{return JSON.parse(localStorage.getItem(HKEY))||[];}catch(e){return [];}}
+function saveHistory(arr){try{localStorage.setItem(HKEY,JSON.stringify(arr.slice(-30)));}catch(e){}}
+function addToHistory(overall){const h=loadHistory();h.push({t:Date.now(),v:overall});saveHistory(h);renderHistory();}
+function renderHistory(){
+  const box=$("progress"); const h=loadHistory();
+  if(!h.length){box.innerHTML='<p class="empty">Aún no hay análisis guardados.</p>';return;}
+  const vals=h.map(x=>x.v), min=Math.min(...vals)-3, max=Math.max(...vals)+3;
+  const W=600,H=64,n=vals.length;
+  const pts=vals.map((v,i)=>{const x=n===1?W/2:i/(n-1)*W;const y=H-((v-min)/((max-min)||1))*H;return [x,y];});
+  const path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const dots=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#7CF5D6"/>`).join('');
+  const fmt=(t)=>new Date(t).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'})+' · '+new Date(t).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  const arr=[...h].reverse();
+  const items=arr.map((x,i)=>{
+    const prev=arr[i+1]; let delta;
+    if(prev){const d=x.v-prev.v;delta=`<span class="h-delta ${d>0?'up':d<0?'down':''}">${d>0?'+':''}${d||'0'}</span>`;}
+    else delta='<span class="h-delta">—</span>';
+    return `<li><span class="h-date">${fmt(x.t)}</span><span style="display:flex;align-items:center;gap:12px"><span class="h-score">${x.v}</span>${delta}</span></li>`;
+  }).join('');
+  box.innerHTML=`<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="#2BAF97" stroke-width="2"/>${dots}</svg>
+    <ul class="hist">${items}</ul>
+    <div class="actions-row"><button class="btn ghost" id="clearHist" style="width:auto">Borrar historial</button></div>`;
+  const c=$("clearHist"); if(c) c.onclick=()=>{if(confirm("¿Borrar todo el historial de este dispositivo?")){try{localStorage.removeItem(HKEY);}catch(e){}renderHistory();}};
+}
+
+async function runDetection(src,iw,ih){
+  clearErr();
+  try{
+    const lm=await getLandmarker();
+    setStatus("Analizando…",true);
+    canvasCol.classList.add("scanning");
+    await new Promise(r=>setTimeout(r,600));
+    fitCanvas(iw,ih);
+    const result=lm.detect(src);
+    canvasCol.classList.remove("scanning");
+    if(!result.faceLandmarks||!result.faceLandmarks.length){
+      setStatus("Sin rostro",false);
+      showErr("No se detectó una cara clara. Prueba de frente, con buena luz y sin obstáculos.");
+      return;
+    }
+    const landmarks=result.faceLandmarks[0];
+    const data=analyze(landmarks,canvas.width,canvas.height);
+    drawOverlay(src,landmarks,data.geo);
+    placeholder.style.display="none"; guide.classList.remove("show");
+    canvas.style.display="block";
+    renderResults(data);
+    addToHistory(data.overall);
+    setStatus("Listo",false);
+    readout.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){
+    canvasCol.classList.remove("scanning"); setStatus("Error",false);
+    showErr("No se pudo completar el análisis. Revisa tu conexión (el modelo se descarga la primera vez) y que la página esté servida por http/https, no abierta como archivo local.");
+    console.error(e);
+  }
+}
+function fromFile(f){if(!f)return;stopCamera();const img=new Image();img.onload=()=>runDetection(img,img.naturalWidth,img.naturalHeight);img.onerror=()=>showErr("No se pudo leer la imagen.");img.src=URL.createObjectURL(f);}
+
+$("selfieBtn").addEventListener("click",()=>$("fileCam").click());
+$("galleryBtn").addEventListener("click",()=>$("fileGal").click());
+$("fileCam").addEventListener("change",e=>fromFile(e.target.files[0]));
+$("fileGal").addEventListener("change",e=>fromFile(e.target.files[0]));
+
+$("liveBtn").addEventListener("click",async()=>{
+  clearErr();
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:1280},height:{ideal:960}},audio:false});
+    video.srcObject=stream; await video.play();
+    placeholder.style.display="none"; video.style.display="block"; guide.classList.add("show"); canvas.style.display="none";
+    camActions.classList.add("show"); setStatus("Cámara activa",false);
+  }catch(e){showErr("No se pudo abrir la cámara en vivo. En el móvil usa «Hacer selfie»; la cámara en vivo requiere permiso y https.");}
+});
+$("captureBtn").addEventListener("click",()=>{
+  if(!stream)return;
+  const w=video.videoWidth,h=video.videoHeight;
+  const tmp=document.createElement("canvas");tmp.width=w;tmp.height=h;
+  tmp.getContext("2d").drawImage(video,0,0,w,h);
+  video.style.display="none"; guide.classList.remove("show"); camActions.classList.remove("show");
+  runDetection(tmp,w,h); stopCamera();
+});
+$("cancelCamBtn").addEventListener("click",()=>{stopCamera();camActions.classList.remove("show");video.style.display="none";guide.classList.remove("show");placeholder.style.display="flex";setStatus("En espera",false);});
+function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
+
+const QA=[
+  ["¿La proporción áurea predice la belleza?","No de forma fiable. Es una idea estética con siglos de tradición, pero los estudios que la vinculan al atractivo son débiles y muy discutidos. Sirve como curiosidad geométrica, no como ley de la naturaleza."],
+  ["¿Qué son los tercios faciales?","Una regla del dibujo clásico que divide la cara en tres franjas de altura similar: frente, zona media y mentón. Ayuda a los artistas a componer un retrato; no es un requisito para una cara bonita."],
+  ["¿Qué es la inclinación de los ojos (canthal tilt)?","El ángulo entre la comisura interna y la externa del ojo. Un ligero ángulo ascendente es frecuente, pero hay muchísima variación normal y sana entre personas y etnias."],
+  ["¿Por qué cambia mi puntuación entre fotos?","El ángulo, la distancia, la luz y la expresión mueven los puntos detectados. Por eso conviene tomar el número como aproximado, nunca exacto. Repite con la cara relajada y de frente para comparar mejor."],
+  ["¿La simetría perfecta es lo ideal?","Ninguna cara real es perfectamente simétrica, y las caras con pequeñas asimetrías suelen percibirse como más naturales y vivas. La simetría absoluta hasta resulta rara a la vista."],
+  ["¿Esto es ciencia médica?","No. Es geometría por curiosidad, hecha con un detector de puntos faciales. Para cualquier duda real sobre tu salud, tu piel o tu cara, lo suyo es un profesional."]
+];
+$("qa").innerHTML=QA.map(qa=>`<details><summary>${qa[0]}</summary><div class="a">${qa[1]}</div></details>`).join("");
+
+(function(){
+  const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(isMobile&&!standalone){
+    $("install").classList.add("show");
+    if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
+      $("installTxt").innerHTML='en Safari, toca el botón <b>Compartir</b> y luego <b>«Añadir a pantalla de inicio»</b>.';
+    }
+  }
+})();
+
+$("lab").addEventListener("pointerenter",()=>{getLandmarker().catch(()=>{});},{once:true});
+renderHistory();
+</script>
+</body>
+</html>
